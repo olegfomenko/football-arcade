@@ -1,52 +1,88 @@
 import arcade
 import football
+import genetic
+import functools
 
-SCREEN_WIDTH = 600
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 1200
+SCREEN_HEIGHT = 750
 
 
 class MyGame(arcade.Window):
     def __init__(self, width, height):
         super().__init__(width, height)
 
-        self.field = football.Field(300, 300, 0.5)
+        self.fields = []
+
+        self.fields.append(football.Field(150, 50, 0.2))
+        self.fields.append(football.Field(150, 200, 0.2))
+        self.fields.append(football.Field(150, 350, 0.2))
+        self.fields.append(football.Field(150, 500, 0.2))
+        self.fields.append(football.Field(150, 650, 0.2))
+
+        self.fields.append(football.Field(450, 50, 0.2))
+        self.fields.append(football.Field(450, 200, 0.2))
+        self.fields.append(football.Field(450, 350, 0.2))
+        self.fields.append(football.Field(450, 500, 0.2))
+        self.fields.append(football.Field(450, 650, 0.2))
+
+        self.fields.append(football.Field(750, 50, 0.2))
+        self.fields.append(football.Field(750, 200, 0.2))
+        self.fields.append(football.Field(750, 350, 0.2))
+        self.fields.append(football.Field(750, 500, 0.2))
+        self.fields.append(football.Field(750, 650, 0.2))
+
+        self.fields.append(football.Field(1050, 50, 0.2))
+        self.fields.append(football.Field(1050, 200, 0.2))
+        self.fields.append(football.Field(1050, 350, 0.2))
+        self.fields.append(football.Field(1050, 500, 0.2))
+        self.fields.append(football.Field(1050, 650, 0.2))
+
+        self.games = []
+
+        self.timer = 0.0
+        self.session_cnt = 1
+
+        for field in self.fields:
+            gene1 = genetic.Gene(field, field.players[0], field.players[1], genetic.random_w1(), genetic.random_w2())
+            gene2 = genetic.Gene(field, field.players[1], field.players[0], genetic.random_w1(), genetic.random_w2())
+            self.games.append(genetic.GeneticGame(field, gene1, gene2))
 
         arcade.set_background_color(arcade.color.WHITE)
 
+    def new_game_session(self):
+        self.timer = 0.0
+        self.session_cnt += 1
+
+        print("Preparing new session number ", self.session_cnt, "\n")
+
+        for field in self.fields:
+            field.new_game()
+
+        self.games = genetic.get_new_game_session(self.fields, self.games)
+
     def setup(self):
-        self.field.setup()
+        for field in self.fields:
+            field.setup()
 
     def on_draw(self):
         arcade.start_render()
-        self.field.draw()
+
+        for field in self.fields:
+            field.draw()
 
     def update(self, delta_time):
-        self.field.update(delta_time)
 
-    def press_key_up(self, player):
-        player.speed_y = 150
+        if self.timer > 180.0:
+            self.new_game_session()
 
-    def press_key_down(self, player):
-        player.speed_y = -150
+        for field in self.fields:
+            field.update(delta_time)
 
-    def press_key_right(self, player):
-        player.speed_x = 150
+        for game in self.games:
+            game.update()
 
-    def press_key_left(self, player):
-        player.speed_x = -150
+        self.timer += delta_time
 
-    def on_key_press(self, key: int, modifiers: int):
-        if key == arcade.key.UP:
-            self.press_key_up(self.field.player)
-
-        if key == arcade.key.DOWN:
-            self.press_key_down(self.field.player)
-
-        if key == arcade.key.RIGHT:
-            self.press_key_right(self.field.player)
-
-        if key == arcade.key.LEFT:
-            self.press_key_left(self.field.player)
 
 game = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT)
 game.setup()

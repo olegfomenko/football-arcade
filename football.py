@@ -21,6 +21,8 @@ class GameObject:
         self.speed_x = 0
         self.speed_y = 0
 
+        self.scale = scale
+
     def to_default(self):
         self.x = self.default_x
         self.y = self.default_y
@@ -36,14 +38,14 @@ class GameObject:
             self.y += self.speed_y * delta_time
 
             if self.speed_x > 0:
-                self.speed_x -= Ball.ACCELERATION * delta_time
+                self.speed_x -= Ball.ACCELERATION * self.scale * delta_time
             else:
-                self.speed_x += Ball.ACCELERATION * delta_time
+                self.speed_x += Ball.ACCELERATION * self.scale * delta_time
 
             if self.speed_y > 0:
-                self.speed_y -= Ball.ACCELERATION * delta_time
+                self.speed_y -= Ball.ACCELERATION * self.scale * delta_time
             else:
-                self.speed_y += Ball.ACCELERATION * delta_time
+                self.speed_y += Ball.ACCELERATION * self.scale * delta_time
 
             if abs(self.speed_x) < Ball.EPS:
                 self.speed_x = 0
@@ -58,9 +60,14 @@ class Ball(GameObject):
     def __init__(self, sprite, x, y, scale):
         super().__init__(sprite, x, y, scale)
 
+
 class Player(GameObject):
-    def __init__(self, sprite, x, y, scale):
+    def __init__(self, sprite, x, y, scale, goal_x, goal_y):
         super().__init__(sprite, x, y, scale)
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+
+        self.count = 0
 
     def stop(self):
         self.speed_x = 0
@@ -86,9 +93,21 @@ class Field:
         self.players = []
 
         self.ball = Ball(arcade.Sprite("sprite/ball.png"), x, y, scale)
-        self.player = Player(arcade.Sprite("sprite/red_player.png"), x - 100, y, scale)
 
-        self.players.append(self.player)
+        self.players.append(Player(arcade.Sprite("sprite/red_player.png"), x - 100, y, scale, self.x - self.width / 2, self.y))
+        self.players.append(Player(arcade.Sprite("sprite/blue_player.png"), x + 100, y, scale, self.x + self.width / 2, self.y))
+
+        self.count_blue = 0
+        self.count_red = 0
+
+    def new_game(self):
+        self.ball.to_default()
+        self.players.clear()
+
+        self.players.append(
+            Player(arcade.Sprite("sprite/red_player.png"), self.x - 100, self.y, self.scale, self.x - self.width / 2, self.y))
+        self.players.append(
+            Player(arcade.Sprite("sprite/blue_player.png"), self.x + 100, self.y, self.scale, self.x + self.width / 2, self.y))
 
         self.count_blue = 0
         self.count_red = 0
@@ -153,6 +172,8 @@ class Field:
             else:
                 object.speed_y = -abs(object.speed_y)
 
+            return True
+
         border_list = object.sprite.collides_with_list(self.x_border_list)
 
         if len(border_list) > 0:
@@ -163,6 +184,7 @@ class Field:
             else:
                 object.speed_x = -abs(object.speed_x)
 
+            return True
 
     def push_objects(self, object: GameObject, to_push: GameObject, c = 1.0):
         if object.x < to_push.x:
@@ -181,16 +203,28 @@ class Field:
 
     def check_ball_collision(self, player: Player):
         if arcade.check_for_collision(player.sprite, self.ball.sprite):
+            player.count += 0.01
             self.push_objects(player, self.ball, 1.5)
 
     def check_other_players_collision(self, player):
         for pl in self.players:
             if pl != player and pl.sprite.collides_with_sprite(player.sprite):
                 self.push_objects(player, pl)
+                return True
+
+    def check_player_on_field(self, player):
+        if player.x < self.x - self.width / 2 or player.x > self.x + self.width / 2:
+            player.count -= 2
+
+            for pl in self.players:
+                pl.to_default()
+            self.ball.to_default()
 
     def update(self, delta_time):
         self.ball.update(delta_time)
-        self.player.update(delta_time)
+
+        for player in self.players:
+            player.update(delta_time)
 
         self.check_border_collision(self.ball)
 
@@ -198,19 +232,54 @@ class Field:
             self.check_ball_collision(player)
             self.check_border_collision(player)
             self.check_other_players_collision(player)
+            self.check_player_on_field(player)
 
         if self.ball.x < self.x - self.width / 2:
             self.ball.to_default()
             for player in self.players:
+                if player.goal_x < self.x:
+                    player.count += 1
+                else:
+                    player.count -= 1
                 player.to_default()
 
             self.count_blue += 1
-            print("Goal by blue! Red : Blue", self.count_red, ":", self.count_blue)
 
         if self.ball.x > self.x + self.width / 2:
             self.ball.to_default()
             for player in self.players:
+                if player.goal_x > self.x:
+                    player.count += 1
+                else:
+                    player.count -= 1
+
                 player.to_default()
 
             self.count_red += 1
-            print("Goal by red! Red : Blue", self.count_red, ":", self.count_blue)
+
+    def get_ball_distance(self, player: Player):
+        return arcade.get_distance_between_sprites(self.ball.sprite, player.sprite)
+
+    def get_player_goal_distance(self, player: Player):
+        return arcade.get_distance(player.goal_x, player.goal_y, player.x, player.y)
+
+    def get_player_opponent_goal_distance(self, pl: Player, op: Player):
+        return arcade.get_distance(pl.x, pl.y, op.goal_x, op.goal_x)
+
+    def get_ball_to_goal_distance(self, player: Player):
+        return arcade.get_distance(self.ball.x, self.ball.y, player.goal_x, player.goal_y)
+
+    def get_top(self, player: Player):
+        return self.y + self.height / 2 - player.y
+
+    def get_bottom(self, player: Player):
+        return player.y - (self.y - self.height / 2)
+
+    def get_right(self, player: Player):
+        return self.x + self.width / 2 - player.x
+
+    def get_left(self, player: Player):
+        return player.x - (self.x - self.width / 2)
+
+    def get_dist(self, p1: Player, p2: Player):
+        return arcade.get_distance_between_sprites(p1.sprite, p2.sprite)
