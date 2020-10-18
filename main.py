@@ -23,19 +23,30 @@ class MyGame(arcade.Window):
     def update(self, delta_time):
         self.field.update(delta_time)
 
+    def press_key_up(self, player):
+        player.speed_y = 150
+
+    def press_key_down(self, player):
+        player.speed_y = -150
+
+    def press_key_right(self, player):
+        player.speed_x = 150
+
+    def press_key_left(self, player):
+        player.speed_x = -150
+
     def on_key_press(self, key: int, modifiers: int):
         if key == arcade.key.UP:
-            self.field.player.speed_y = 150
+            self.press_key_up(self.field.player)
 
         if key == arcade.key.DOWN:
-            self.field.player.speed_y = -150
+            self.press_key_down(self.field.player)
 
         if key == arcade.key.RIGHT:
-            self.field.player.speed_x = 150
+            self.press_key_right(self.field.player)
 
         if key == arcade.key.LEFT:
-            self.field.player.speed_x = -150
-
+            self.press_key_left(self.field.player)
 
 game = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT)
 game.setup()
