@@ -5,7 +5,7 @@ import numpy
 INPUT_LAYER_SZ = 16
 OUTPUT_LAYER_SZ = 2
 
-numpy.random.seed(1)
+GENERATION_CNT = 60
 
 
 def get_random_matrix(sz_i, sz_j):
@@ -43,14 +43,6 @@ class Gene:
     def set_field(self, field):
         self.field = field
 
-    def __cmp__(self, other):
-        if self.player.count < other.player.count:
-            return -1
-        elif self.player.count == other.player.count:
-            return 0
-        else:
-            return 1
-
     def get_input_layer(self):
         layer = []
         layer.append(self.field.get_dist(self.player, self.opponent))
@@ -81,14 +73,14 @@ class Gene:
 def mutate(w, sz_i, sz_j):
     for i in range(0, sz_i):
         for j in range(0, sz_j):
-            if numpy.random.random() > 0.8:
-                w[i][j] *= numpy.random.random()
+            if numpy.random.random() > 0.6:
+                w[i][j] += numpy.random.random() * 2 - 1
 
     return w
 
 
 def cross_matrix(m1, m2, sz_i, sz_j):
-    m = numpy.array(sz_i, sz_j)
+    m = numpy.zeros(shape=(sz_i, sz_j))
 
     for i in range(0, sz_i):
         for j in range(0, sz_j):
@@ -103,7 +95,7 @@ def cross_matrix(m1, m2, sz_i, sz_j):
 def get_new_gene(gene1: Gene, gene2: Gene):
     w1 = cross_matrix(gene1.w1, gene2.w1, INPUT_LAYER_SZ, INPUT_LAYER_SZ)
     w2 = cross_matrix(gene1.w2, gene2.w2, INPUT_LAYER_SZ, OUTPUT_LAYER_SZ)
-    return Gene(w1=w1, w2=w2)
+    return Gene(None, None, None, w1=w1, w2=w2)
 
 
 class GeneticGame:
@@ -154,27 +146,27 @@ def choose_best(games):
         genes.append(game.gene1)
         genes.append(game.gene2)
 
-    genes.sort()
+    genes = sorted(genes, key=lambda gene : gene.player.count)
 
     best = []
 
-    for i in range(20, 40):
+    for i in range(GENERATION_CNT, GENERATION_CNT * 2):
         best.append(genes[i])
 
     return best
 
 
-def get_new_game_session(fields, games):
-    games.clear()
+def get_new_game_session(fields, games) -> []:
     best = choose_best(games)
 
-    for i in range(0, 20):
-        best.append(get_new_gene(best[i], best[(i + 1) % 20]))
+    games.clear()
 
-    print("Best gene from this session: \ncnt=", best[19].player.count, "\nw1=", best[19].w1, "\nw2=", best[19].w2,
-          "\n\n")
+    for i in range(0, GENERATION_CNT):
+        best.append(get_new_gene(best[i], best[(i + 1) % GENERATION_CNT]))
 
-    for i in range(1, 40):
+    print("Best gene from this session: \ncnt=", best[GENERATION_CNT - 1].player.count, "\nw1=", best[GENERATION_CNT-1].w1, "\nw2=", best[GENERATION_CNT-1].w2, "\n\n")
+
+    for i in range(1, GENERATION_CNT * 2, 2):
         best[i].set_player(fields[i // 2].players[0])
         best[i].set_opponent(fields[i // 2].players[1])
         best[i].set_field(fields[i // 2])
@@ -184,3 +176,5 @@ def get_new_game_session(fields, games):
         best[i - 1].set_field(fields[i // 2])
 
         games.append(GeneticGame(fields[i // 2], best[i], best[i - 1]))
+
+    return games

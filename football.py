@@ -67,7 +67,7 @@ class Player(GameObject):
         self.goal_x = goal_x
         self.goal_y = goal_y
 
-        self.count = 0
+        self.count = 0.0
 
     def stop(self):
         self.speed_x = 0
@@ -172,6 +172,9 @@ class Field:
             else:
                 object.speed_y = -abs(object.speed_y)
 
+            if isinstance(object, Player):
+                object.count -= 0.1
+
             return True
 
         border_list = object.sprite.collides_with_list(self.x_border_list)
@@ -184,9 +187,12 @@ class Field:
             else:
                 object.speed_x = -abs(object.speed_x)
 
+            if isinstance(object, Player):
+                object.count -= 0.1
+
             return True
 
-    def push_objects(self, object: GameObject, to_push: GameObject, c = 1.0):
+    def push_objects(self, object: GameObject, to_push: GameObject, c=1.0):
         if object.x < to_push.x:
             object.speed_x = -abs(object.speed_x)
             to_push.speed_x = abs(object.speed_x) * c
@@ -203,18 +209,21 @@ class Field:
 
     def check_ball_collision(self, player: Player):
         if arcade.check_for_collision(player.sprite, self.ball.sprite):
-            player.count += 0.01
+            player.count += 0.2
             self.push_objects(player, self.ball, 1.5)
 
     def check_other_players_collision(self, player):
         for pl in self.players:
             if pl != player and pl.sprite.collides_with_sprite(player.sprite):
                 self.push_objects(player, pl)
+                player.count -= 0.5
+                pl.count -= 0.5
                 return True
 
     def check_player_on_field(self, player):
-        if player.x < self.x - self.width / 2 or player.x > self.x + self.width / 2:
-            player.count -= 2
+        if player.x < self.x - self.width / 2 or player.x > self.x + self.width / 2 or \
+                player.y > self.y + self.height / 2 or player.y < self.y - self.height / 2:
+            player.count -= 1
 
             for pl in self.players:
                 pl.to_default()

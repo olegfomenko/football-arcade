@@ -13,29 +13,12 @@ class MyGame(arcade.Window):
 
         self.fields = []
 
-        self.fields.append(football.Field(150, 50, 0.2))
-        self.fields.append(football.Field(150, 200, 0.2))
-        self.fields.append(football.Field(150, 350, 0.2))
-        self.fields.append(football.Field(150, 500, 0.2))
-        self.fields.append(football.Field(150, 650, 0.2))
+        x = 150
+        y = 50
 
-        self.fields.append(football.Field(450, 50, 0.2))
-        self.fields.append(football.Field(450, 200, 0.2))
-        self.fields.append(football.Field(450, 350, 0.2))
-        self.fields.append(football.Field(450, 500, 0.2))
-        self.fields.append(football.Field(450, 650, 0.2))
-
-        self.fields.append(football.Field(750, 50, 0.2))
-        self.fields.append(football.Field(750, 200, 0.2))
-        self.fields.append(football.Field(750, 350, 0.2))
-        self.fields.append(football.Field(750, 500, 0.2))
-        self.fields.append(football.Field(750, 650, 0.2))
-
-        self.fields.append(football.Field(1050, 50, 0.2))
-        self.fields.append(football.Field(1050, 200, 0.2))
-        self.fields.append(football.Field(1050, 350, 0.2))
-        self.fields.append(football.Field(1050, 500, 0.2))
-        self.fields.append(football.Field(1050, 650, 0.2))
+        for i in range(0, 5):
+            for j in range(0, genetic.GENERATION_CNT // 5):
+                self.fields.append(football.Field(-1050 + j * 300, 50 + i * 150, 0.2))
 
         self.games = []
 
@@ -72,7 +55,7 @@ class MyGame(arcade.Window):
 
     def update(self, delta_time):
 
-        if self.timer > 180.0:
+        if self.timer > 20.0:
             self.new_game_session()
 
         for field in self.fields:
