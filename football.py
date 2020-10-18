@@ -94,41 +94,66 @@ class Field:
         self.x = x
         self.y = y
 
-        self.top_border = arcade.Sprite("sprite/top.png")
-        self.bottom_border = arcade.Sprite("sprite/top.png")
-
-        self.left_border = arcade.Sprite("sprite/left.png")
-        self.right_border = arcade.Sprite("sprite/left.png")
+        self.x_border_list = arcade.SpriteList()
+        self.y_border_list = arcade.SpriteList()
 
         self.ball = Ball(arcade.Sprite("sprite/ball.png"), x, y, scale)
         self.player = Player(arcade.Sprite("sprite/red_player.png"), x - 100, y, scale)
 
     def __init_borders(self):
-        self.top_border.scale = self.scale
-        self.top_border.set_position(self.x, self.y + self.height / 2 - self.top_border.height / 2)
+        border = arcade.Sprite("sprite/top.png")
+        border.color = arcade.color.PINK
+        border.scale = self.scale
+        border.set_position(self.x, self.y + self.height / 2 - border.height / 2)
+        self.y_border_list.append(border)
 
-        self.bottom_border.scale = self.scale
-        self.bottom_border.set_position(self.x, self.y - self.height / 2 + self.bottom_border.height / 2)
+        border = arcade.Sprite("sprite/top.png")
+        border.color = arcade.color.PINK
+        border.scale = self.scale
+        border.set_position(self.x, self.y - self.height / 2 + border.height / 2)
+        self.y_border_list.append(border)
 
-        self.left_border.scale = self.scale
-        self.left_border.set_position(self.x - self.width / 2 + self.left_border.width / 2, self.y)
+        border = arcade.Sprite("sprite/part.png")
+        border.color = arcade.color.PINK
+        border.scale = self.scale
+        border.set_position(self.x - self.width / 2 + border.width / 2,
+                            self.y - self.height / 2 + border.height / 2)
+        self.x_border_list.append(border)
 
-        self.right_border.scale = self.scale
-        self.right_border.set_position(self.x + self.width / 2 - self.left_border.width / 2, self.y)
+        border = arcade.Sprite("sprite/part.png")
+        border.color = arcade.color.PINK
+        border.scale = self.scale
+        border.set_position(self.x - self.width / 2 + border.width / 2,
+                            self.y + self.height / 2 - border.height / 2)
+        self.x_border_list.append(border)
+
+        border = arcade.Sprite("sprite/part.png")
+        border.color = arcade.color.PINK
+        border.scale = self.scale
+        border.set_position(self.x + self.width / 2 - border.width / 2,
+                            self.y - self.height / 2 + border.height / 2)
+        self.x_border_list.append(border)
+
+        border = arcade.Sprite("sprite/part.png")
+        border.color = arcade.color.PINK
+        border.scale = self.scale
+        border.set_position(self.x + self.width / 2 - border.width / 2,
+                            self.y + self.height / 2 - border.height / 2)
+        self.x_border_list.append(border)
 
     def setup(self):
         self.__init_borders()
         self.field.set_position(self.x, self.y)
 
     def draw(self):
-        self.top_border.draw()
-        self.bottom_border.draw()
-        self.left_border.draw()
-        self.right_border.draw()
+
 
         self.field.draw()
         self.ball.draw()
         self.player.draw()
+
+        self.y_border_list.draw()
+        self.x_border_list.draw()
 
     def update(self, delta_time):
 
@@ -138,10 +163,8 @@ class Field:
         if arcade.check_for_collision(self.player.sprite, self.ball.sprite):
             self.ball.change_speed(self.player.speed_x, self.player.speed_y)
 
-        if arcade.check_for_collision(self.ball.sprite, self.top_border) or \
-                arcade.check_for_collision(self.ball.sprite, self.bottom_border):
+        if len(self.ball.sprite.collides_with_list(self.y_border_list)) > 0:
             self.ball.speed_y = -self.ball.speed_y
 
-        if arcade.check_for_collision(self.ball.sprite, self.right_border) or \
-                arcade.check_for_collision(self.ball.sprite, self.left_border):
-            self.ball.speed_y = -self.ball.speed_y
+        if len(self.ball.sprite.collides_with_list(self.x_border_list)) > 0:
+            self.ball.speed_x = -self.ball.speed_x

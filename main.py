@@ -32,16 +32,16 @@ class MyGame(arcade.Window):
 
     def on_key_press(self, key: int, modifiers: int):
         if key == arcade.key.UP:
-            self.field.player.speed_y = 100
+            self.field.player.speed_y = 150
 
         if key == arcade.key.DOWN:
-            self.field.player.speed_y = -100
+            self.field.player.speed_y = -150
 
         if key == arcade.key.RIGHT:
-            self.field.player.speed_x = 100
+            self.field.player.speed_x = 150
 
         if key == arcade.key.LEFT:
-            self.field.player.speed_x = -100
+            self.field.player.speed_x = -150
 
 
 game = MyGame(SCREEN_WIDTH, SCREEN_HEIGHT)
