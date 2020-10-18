@@ -18,9 +18,13 @@ class GameObject:
         self.default_x = self.x = default_x
         self.default_y = self.y = default_y
 
+        self.speed_x = 0
+        self.speed_y = 0
+
     def to_default(self):
         self.x = self.default_x
         self.y = self.default_y
+        self.speed_x = self.speed_y = 0
         self.sprite.set_position(self.x, self.y)
 
     def draw(self):
@@ -54,15 +58,9 @@ class Ball(GameObject):
     def __init__(self, sprite, x, y, scale):
         super().__init__(sprite, x, y, scale)
 
-        self.speed_x = 0
-        self.speed_y = 0
-
 class Player(GameObject):
     def __init__(self, sprite, x, y, scale):
         super().__init__(sprite, x, y, scale)
-
-        self.speed_x = 0
-        self.speed_y = 0
 
     def stop(self):
         self.speed_x = 0
@@ -140,7 +138,9 @@ class Field:
 
         self.field.draw()
         self.ball.draw()
-        self.player.draw()
+
+        for player in self.players:
+            player.draw()
 
     def check_border_collision(self, object: GameObject):
         border_list = object.sprite.collides_with_list(self.y_border_list)
@@ -192,19 +192,25 @@ class Field:
         self.ball.update(delta_time)
         self.player.update(delta_time)
 
-        self.check_ball_collision(self.player)
         self.check_border_collision(self.ball)
-        self.check_border_collision(self.player)
-        self.check_other_players_collision(self.player)
+
+        for player in self.players:
+            self.check_ball_collision(player)
+            self.check_border_collision(player)
+            self.check_other_players_collision(player)
 
         if self.ball.x < self.x - self.width / 2:
             self.ball.to_default()
-            self.player.to_default()
-            ++self.count_blue
+            for player in self.players:
+                player.to_default()
+
+            self.count_blue += 1
             print("Goal by blue! Red : Blue", self.count_red, ":", self.count_blue)
 
         if self.ball.x > self.x + self.width / 2:
             self.ball.to_default()
-            self.player.to_default()
-            ++self.count_red
+            for player in self.players:
+                player.to_default()
+
+            self.count_red += 1
             print("Goal by red! Red : Blue", self.count_red, ":", self.count_blue)
