@@ -84,7 +84,6 @@ class Field:
     def __init__(self, x, y, scale):
         self.scale = scale
 
-        self.border_list = arcade.SpriteList()
         self.field = arcade.Sprite("sprite/field_texture.png")
 
         self.width = self.field.width * scale
@@ -95,35 +94,54 @@ class Field:
         self.x = x
         self.y = y
 
-        self.ball = Ball(arcade.Sprite("sprite/ball.png"), x, y, scale)
+        self.top_border = arcade.Sprite("sprite/top.png")
+        self.bottom_border = arcade.Sprite("sprite/top.png")
 
+        self.left_border = arcade.Sprite("sprite/left.png")
+        self.right_border = arcade.Sprite("sprite/left.png")
+
+        self.ball = Ball(arcade.Sprite("sprite/ball.png"), x, y, scale)
         self.player = Player(arcade.Sprite("sprite/red_player.png"), x - 100, y, scale)
 
     def __init_borders(self):
-        top_border = arcade.Sprite("sprite/top_border.png")
-        top_border.scale = self.scale
-        top_border.set_position(self.x, self.y + self.height / 2 - top_border.height / 2)
+        self.top_border.scale = self.scale
+        self.top_border.set_position(self.x, self.y + self.height / 2 - self.top_border.height / 2)
 
-        bottom_border = arcade.Sprite("sprite/bottom_border.png")
-        bottom_border.scale = self.scale
-        bottom_border.set_position(self.x, self.y - self.height / 2 + bottom_border.height / 2)
+        self.bottom_border.scale = self.scale
+        self.bottom_border.set_position(self.x, self.y - self.height / 2 + self.bottom_border.height / 2)
 
-        self.border_list.append(top_border)
-        self.border_list.append(bottom_border)
+        self.left_border.scale = self.scale
+        self.left_border.set_position(self.x - self.width / 2 + self.left_border.width / 2, self.y)
+
+        self.right_border.scale = self.scale
+        self.right_border.set_position(self.x + self.width / 2 - self.left_border.width / 2, self.y)
 
     def setup(self):
         self.__init_borders()
         self.field.set_position(self.x, self.y)
 
     def draw(self):
+        self.top_border.draw()
+        self.bottom_border.draw()
+        self.left_border.draw()
+        self.right_border.draw()
+
         self.field.draw()
-        self.border_list.draw()
         self.ball.draw()
         self.player.draw()
 
     def update(self, delta_time):
+
         self.ball.update(delta_time)
         self.player.update(delta_time)
 
         if arcade.check_for_collision(self.player.sprite, self.ball.sprite):
             self.ball.change_speed(self.player.speed_x, self.player.speed_y)
+
+        if arcade.check_for_collision(self.ball.sprite, self.top_border) or \
+                arcade.check_for_collision(self.ball.sprite, self.bottom_border):
+            self.ball.speed_y = -self.ball.speed_y
+
+        if arcade.check_for_collision(self.ball.sprite, self.right_border) or \
+                arcade.check_for_collision(self.ball.sprite, self.left_border):
+            self.ball.speed_y = -self.ball.speed_y
