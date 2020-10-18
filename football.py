@@ -57,11 +57,6 @@ class Ball(GameObject):
         self.speed_x = 0
         self.speed_y = 0
 
-    def change_speed(self, speed_x, speed_y):
-        self.speed_x = speed_x * 1.5
-        self.speed_y = speed_y * 1.5
-
-
 class Player(GameObject):
     def __init__(self, sprite, x, y, scale):
         super().__init__(sprite, x, y, scale)
@@ -147,67 +142,60 @@ class Field:
         self.ball.draw()
         self.player.draw()
 
-    def check(self, pl) -> bool:
-        for i in range(0, len(self.players)):
-            if pl != self.players[i] and arcade.check_for_collision(self.players[i].sprite, pl.sprite):
-                self.players[i].stop()
-                pl.stop()
-                return True
+    def check_border_collision(self, object: GameObject):
+        border_list = object.sprite.collides_with_list(self.y_border_list)
 
-        if pl.sprite.collides_with_list(self.y_border_list):
-            pl.speed_y = -pl.speed_y
-            return True
+        if len(border_list) > 0:
+            border = border_list[0]
 
-        if pl.sprite.collides_with_list(self.x_border_list):
-            pl.speed_x = -pl.speed_x
-            return True
+            if border.center_y < object.y:
+                object.speed_y = abs(object.speed_y)
+            else:
+                object.speed_y = -abs(object.speed_y)
 
-        return False
+        border_list = object.sprite.collides_with_list(self.x_border_list)
+
+        if len(border_list) > 0:
+            border = border_list[0]
+
+            if border.center_x < object.x:
+                object.speed_x = abs(object.speed_x)
+            else:
+                object.speed_x = -abs(object.speed_x)
+
+
+    def push_objects(self, object: GameObject, to_push: GameObject, c = 1.0):
+        if object.x < to_push.x:
+            object.speed_x = -abs(object.speed_x)
+            to_push.speed_x = abs(object.speed_x) * c
+        else:
+            object.speed_x = abs(object.speed_x)
+            to_push.speed_x = -abs(object.speed_x) * c
+
+        if object.y < to_push.y:
+            object.speed_y = -abs(object.speed_y)
+            to_push.speed_y = abs(object.speed_y) * c
+        else:
+            object.speed_y = abs(object.speed_y)
+            to_push.speed_y = -abs(object.speed_y) * c
+
+    def check_ball_collision(self, player: Player):
+        if arcade.check_for_collision(player.sprite, self.ball.sprite):
+            self.push_objects(player, self.ball, 1.5)
+
+    def check_other_players_collision(self, player):
+        for pl in self.players:
+            if pl != player and pl.sprite.collides_with_sprite(player.sprite):
+                self.push_objects(player, pl)
 
     def update(self, delta_time):
         self.ball.update(delta_time)
         self.player.update(delta_time)
 
-        if arcade.check_for_collision(self.player.sprite, self.ball.sprite):
-            self.ball.change_speed(self.player.speed_x, self.player.speed_y)
-
-            if self.player.x < self.ball.x:
-                self.player.speed_x = -abs(self.player.speed_x)
-                self.ball.speed_x = abs(self.player.speed_x)
-            else:
-                self.player.speed_x = abs(self.player.speed_x)
-                self.ball.speed_x = -abs(self.player.speed_x)
-
-            if self.player.y < self.ball.y:
-                self.player.speed_y = -abs(self.player.speed_y)
-                self.ball.speed_y = abs(self.player.speed_y)
-            else:
-                self.player.speed_y = abs(self.player.speed_y)
-                self.ball.speed_y = -abs(self.player.speed_y)
-
-
-        border_list = self.ball.sprite.collides_with_list(self.y_border_list)
-
-        if len(border_list) > 0:
-            border = border_list[0]
-
-            if border.center_y < self.ball.y:
-                self.ball.speed_y = abs(self.ball.speed_y)
-            else:
-                self.ball.speed_y = -abs(self.ball.speed_y)
-
-        border_list = self.ball.sprite.collides_with_list(self.x_border_list)
-
-        if len(border_list) > 0:
-            border = border_list[0]
-
-            if border.center_x < self.ball.x:
-                self.ball.speed_x = abs(self.ball.speed_x)
-            else:
-                self.ball.speed_x = -abs(self.ball.speed_x)
-
-        for i in range(0, len(self.players)):
-            self.check(self.players[i])
+        self.check_ball_collision(self.player)
+        self.check_border_collision(self.ball)
+        self.check_border_collision(self.player)
+        self.check_other_players_collision(self.player)
 
         if self.ball.x < self.x - self.width / 2:
             self.ball.to_default()
