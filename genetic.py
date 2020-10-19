@@ -86,7 +86,7 @@ def random_w1():
 
     w1 = numpy.array(w1)
 
-    return mutate(w1, INPUT_LAYER_SZ, INPUT_LAYER_SZ, 0.5)
+    return mutate(w1, INPUT_LAYER_SZ, INPUT_LAYER_SZ, 0.5, 10.0)
 
 
 def random_w2():
@@ -108,7 +108,7 @@ def random_w2():
           [2.10622388e+01, -9.76508366e+00]]
 
     w2 = numpy.array(w2)
-    return mutate(w2, INPUT_LAYER_SZ, OUTPUT_LAYER_SZ, 0.5)
+    return mutate(w2, INPUT_LAYER_SZ, OUTPUT_LAYER_SZ, 0.5, 10.0)
 
 
 class Gene:
@@ -155,11 +155,11 @@ class Gene:
         return output_layer
 
 
-def mutate(w, sz_i, sz_j, c=0.2):
+def mutate(w, sz_i, sz_j, c=0.3, rg=2.0):
     for i in range(0, sz_i):
         for j in range(0, sz_j):
             if numpy.random.random() < c:
-                w[i][j] += numpy.random.random() * 2 - 1
+                w[i][j] += numpy.random.random() * rg - rg/2
 
     return w
 
