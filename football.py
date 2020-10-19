@@ -209,15 +209,13 @@ class Field:
 
     def check_ball_collision(self, player: Player):
         if arcade.check_for_collision(player.sprite, self.ball.sprite):
-            player.count += 0.2
+            player.count += 0.5
             self.push_objects(player, self.ball, 1.5)
 
     def check_other_players_collision(self, player):
         for pl in self.players:
             if pl != player and pl.sprite.collides_with_sprite(player.sprite):
                 self.push_objects(player, pl)
-                player.count -= 0.5
-                pl.count -= 0.5
                 return True
 
     def check_player_on_field(self, player):
@@ -267,7 +265,10 @@ class Field:
             self.count_red += 1
 
     def get_ball_distance(self, player: Player):
-        return arcade.get_distance_between_sprites(self.ball.sprite, player.sprite)
+        dist = arcade.get_distance_between_sprites(self.ball.sprite, player.sprite)
+        if dist > self.width / 2:
+            player.count -= 0.1
+        return dist
 
     def get_player_goal_distance(self, player: Player):
         return arcade.get_distance(player.goal_x, player.goal_y, player.x, player.y)

@@ -18,7 +18,7 @@ class MyGame(arcade.Window):
 
         for i in range(0, 5):
             for j in range(0, genetic.GENERATION_CNT // 5):
-                self.fields.append(football.Field(-1050 + j * 300, 50 + i * 150, 0.2))
+                self.fields.append(football.Field(150 + j * 300, 50 + i * 150, 0.2))
 
         self.games = []
 
@@ -55,7 +55,7 @@ class MyGame(arcade.Window):
 
     def update(self, delta_time):
 
-        if self.timer > 20.0:
+        if self.timer > 30.0:
             self.new_game_session()
 
         for field in self.fields:
