@@ -209,7 +209,6 @@ class Field:
 
     def check_ball_collision(self, player: Player):
         if arcade.check_for_collision(player.sprite, self.ball.sprite):
-            player.count += 0.5
             self.push_objects(player, self.ball, 1.5)
 
     def check_other_players_collision(self, player):

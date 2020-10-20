@@ -58,11 +58,11 @@ class MyGame(arcade.Window):
         if self.timer > 20.0:
             self.new_game_session()
 
-        for field in self.fields:
-            field.update(delta_time)
-
         for game in self.games:
             game.update()
+
+        for field in self.fields:
+            field.update(delta_time)
 
         self.timer += delta_time
 

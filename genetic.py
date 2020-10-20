@@ -104,20 +104,48 @@ class GeneticGame:
         self.gene1 = gene1
         self.gene2 = gene2
 
+    def check_top(self, player):
+        for pl in self.field.players:
+            if player != pl and arcade.check_for_collision(player.sprite, pl.sprite) and pl.y > player.y:
+                return False
+
+        return not (arcade.check_for_collision(player.sprite, self.field.ball.sprite)) or player.y > self.field.ball.y
+
+    def check_down(self, player):
+        for pl in self.field.players:
+            if player != pl and arcade.check_for_collision(player.sprite, pl.sprite) and pl.y < player.y:
+                return False
+
+        return not (arcade.check_for_collision(player.sprite, self.field.ball.sprite)) or player.y < self.field.ball.y
+
+    def check_right(self, player):
+        for pl in self.field.players:
+            if player != pl and arcade.check_for_collision(player.sprite, pl.sprite) and pl.x > player.x:
+                return False
+
+        return not (arcade.check_for_collision(player.sprite, self.field.ball.sprite)) or player.x > self.field.ball.x
+
+    def check_left(self, player):
+        for pl in self.field.players:
+            if player != pl and arcade.check_for_collision(player.sprite, pl.sprite) and pl.x < player.x:
+                return False
+
+        return not (arcade.check_for_collision(player.sprite, self.field.ball.sprite)) or player.x < self.field.ball.x
+
     def press_key_up(self, player):
-        if not(self.field.check_other_players_collision(player)) and not(self.field.check_border_collision(player)):
+        if self.check_top(player) and not(self.field.check_border_collision(player)):
             player.speed_y = 300 * player.scale
 
     def press_key_down(self, player):
-        if not (self.field.check_other_players_collision(player)) and not (self.field.check_border_collision(player)):
+        if self.check_down(player) and not (self.field.check_border_collision(player)):
             player.speed_y = -300 * player.scale
 
     def press_key_right(self, player):
-        if not (self.field.check_other_players_collision(player)) and not (self.field.check_border_collision(player)):
+        if self.check_right(player) and not (self.field.check_border_collision(player)):
             player.speed_x = 300 * player.scale
 
     def press_key_left(self, player):
-        if not (self.field.check_other_players_collision(player)) and not (self.field.check_border_collision(player)):
+        if self.check_left(player) and not (self.field.check_border_collision(player)):
             player.speed_x = -300 * player.scale
 
     def make_choice(self, gene: Gene):
@@ -132,7 +160,6 @@ class GeneticGame:
                 self.press_key_down(gene.player) if choice[0] > 0 else self.press_key_up(gene.player)
             else:
                 self.press_key_left(gene.player) if choice[1] > 0 else self.press_key_right(gene.player)
-
 
     def update(self):
         self.make_choice(self.gene1)
