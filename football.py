@@ -216,6 +216,8 @@ class Field:
         for pl in self.players:
             if pl != player and pl.sprite.collides_with_sprite(player.sprite):
                 self.push_objects(player, pl)
+                pl.count -= 0.2
+                player.count -= 0.2
                 return True
 
     def check_player_on_field(self, player):
