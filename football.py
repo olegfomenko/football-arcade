@@ -2,8 +2,11 @@ import arcade
 
 
 class GameObject:
+    """
+    Representation of game object (ball or a player)
+    """
     ACCELERATION = 50
-    EPS = 0e-9
+    EPS = 0e-6
 
     def __init__(self, sprite: arcade.Sprite, default_x, default_y, scale):
         self.sprite = sprite
@@ -24,6 +27,10 @@ class GameObject:
         self.scale = scale
 
     def to_default(self):
+        """
+        Resetting position ans speed to default values (for game restarting)
+        :return:
+        """
         self.x = self.default_x
         self.y = self.default_y
         self.speed_x = self.speed_y = 0
@@ -33,6 +40,11 @@ class GameObject:
         self.sprite.draw()
 
     def update(self, delta_time):
+        """
+        Updating object position
+        :param delta_time: time from last update
+        :return:
+        """
         if self.speed_x != 0 or self.speed_y != 0:
             self.x += self.speed_x * delta_time
             self.y += self.speed_y * delta_time
@@ -67,11 +79,35 @@ class Player(GameObject):
         self.goal_x = goal_x
         self.goal_y = goal_y
 
+        # Player game score value
         self.count = 0.0
+
+        # Time-punishment value
+        self.punish = 0.01
 
     def stop(self):
         self.speed_x = 0
         self.speed_y = 0
+
+    def change_cnt(self, add, flag=True):
+        """
+        Changing player game count
+        :param add: change value
+        :param flag: flag for resetting time-punish
+        """
+        self.count += add
+        if flag:
+            self.punish = 0.01
+
+    def update(self, delta_time):
+        self.count -= self.punish * delta_time
+        self.punish += delta_time * 2.0
+        super(Player, self).update(delta_time)
+
+    def to_default(self):
+        # Resetting time-punishment
+        self.punish = 0.01
+        super(Player, self).to_default()
 
 
 class Field:
@@ -94,20 +130,28 @@ class Field:
 
         self.ball = Ball(arcade.Sprite("sprite/ball.png"), x, y, scale)
 
-        self.players.append(Player(arcade.Sprite("sprite/red_player.png"), x - 100, y, scale, self.x - self.width / 2, self.y))
-        self.players.append(Player(arcade.Sprite("sprite/blue_player.png"), x + 100, y, scale, self.x + self.width / 2, self.y))
+        self.players.append(
+            Player(arcade.Sprite("sprite/red_player.png"), x - 100, y, scale, self.x - self.width / 2, self.y))
+        self.players.append(
+            Player(arcade.Sprite("sprite/blue_player.png"), x + 100, y, scale, self.x + self.width / 2, self.y))
 
         self.count_blue = 0
         self.count_red = 0
 
     def new_game(self):
+        """
+        Init of new game (creating new players, resetting ball position, etc.)
+        :return:
+        """
         self.ball.to_default()
         self.players.clear()
 
         self.players.append(
-            Player(arcade.Sprite("sprite/red_player.png"), self.x - 100, self.y, self.scale, self.x - self.width / 2, self.y))
+            Player(arcade.Sprite("sprite/red_player.png"), self.x - 100, self.y, self.scale, self.x - self.width / 2,
+                   self.y))
         self.players.append(
-            Player(arcade.Sprite("sprite/blue_player.png"), self.x + 100, self.y, self.scale, self.x + self.width / 2, self.y))
+            Player(arcade.Sprite("sprite/blue_player.png"), self.x + 100, self.y, self.scale, self.x + self.width / 2,
+                   self.y))
 
         self.count_blue = 0
         self.count_red = 0
@@ -162,6 +206,11 @@ class Field:
             player.draw()
 
     def check_border_collision(self, object: GameObject):
+        """
+        Checking game object borders collision. Updating score if object is instance of Player
+        :param object:
+        :return:
+        """
         border_list = object.sprite.collides_with_list(self.y_border_list)
 
         if len(border_list) > 0:
@@ -173,7 +222,7 @@ class Field:
                 object.speed_y = -abs(object.speed_y)
 
             if isinstance(object, Player):
-                object.count -= 0.1
+                object.change_cnt(-0.2)
 
             return True
 
@@ -188,11 +237,21 @@ class Field:
                 object.speed_x = -abs(object.speed_x)
 
             if isinstance(object, Player):
-                object.count -= 0.1
+                object.change_cnt(-0.2)
 
             return True
 
     def push_objects(self, object: GameObject, to_push: GameObject, c=1.0):
+        """
+        Pushing objects after collision.
+        Resetting speed of to_push object with equal object values.
+        Resetting speed of object with inverted values
+
+        :param object: current object
+        :param to_push: collised object
+        :param c: acceleration for to_push object
+        :return:
+        """
         if object.x < to_push.x:
             object.speed_x = -abs(object.speed_x)
             to_push.speed_x = abs(object.speed_x) * c
@@ -210,19 +269,18 @@ class Field:
     def check_ball_collision(self, player: Player):
         if arcade.check_for_collision(player.sprite, self.ball.sprite):
             self.push_objects(player, self.ball, 1.5)
+            player.change_cnt(0.1, False)
 
     def check_other_players_collision(self, player):
         for pl in self.players:
             if pl != player and pl.sprite.collides_with_sprite(player.sprite):
                 self.push_objects(player, pl)
-                pl.count -= 0.2
-                player.count -= 0.2
                 return True
 
     def check_player_on_field(self, player):
         if player.x < self.x - self.width / 2 or player.x > self.x + self.width / 2 or \
                 player.y > self.y + self.height / 2 or player.y < self.y - self.height / 2:
-            player.count -= 1
+            player.change_cnt(-1.0)
 
             for pl in self.players:
                 pl.to_default()
@@ -246,9 +304,9 @@ class Field:
             self.ball.to_default()
             for player in self.players:
                 if player.goal_x < self.x:
-                    player.count += 1
+                    player.change_cnt(1)
                 else:
-                    player.count -= 1
+                    player.change_cnt(-1)
                 player.to_default()
 
             self.count_blue += 1
@@ -257,19 +315,16 @@ class Field:
             self.ball.to_default()
             for player in self.players:
                 if player.goal_x > self.x:
-                    player.count += 1
+                    player.change_cnt(1)
                 else:
-                    player.count -= 1
+                    player.change_cnt(-1)
 
                 player.to_default()
 
             self.count_red += 1
 
     def get_ball_distance(self, player: Player):
-        dist = arcade.get_distance_between_sprites(self.ball.sprite, player.sprite)
-        if dist > self.width / 2:
-            player.count -= 0.1
-        return dist
+        return arcade.get_distance_between_sprites(self.ball.sprite, player.sprite)
 
     def get_player_goal_distance(self, player: Player):
         return arcade.get_distance(player.goal_x, player.goal_y, player.x, player.y)

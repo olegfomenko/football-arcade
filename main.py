@@ -1,7 +1,6 @@
 import arcade
 import football
 import genetic
-import functools
 
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 750
